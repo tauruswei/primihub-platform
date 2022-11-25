@@ -39,7 +39,7 @@ module.exports = {
     },
     proxy: {
       '/dev-api': {
-        target: '',
+        target: 'http:localhost:8080',
         ws: true,
         changeOrigin: true,
         pathRewrite: {
