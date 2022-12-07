@@ -49,27 +49,27 @@ services:
       primihub_net:
         ipv4_address: 172.28.1.16
 
-  rabbitmq2:
-    image: $RABBITMQ_IMAGE
-#    platform: linux/amd64
-    container_name: rabbitmq2
-    restart: always
-    depends_on:
-      - redis
-    networks:
-      primihub_net:
-        ipv4_address: 172.28.1.17
-
-  rabbitmq3:
-    image: $RABBITMQ_IMAGE
-#    platform: linux/amd64
-    container_name: rabbitmq3
-    restart: always
-    depends_on:
-      - redis
-    networks:
-      primihub_net:
-        ipv4_address: 172.28.1.18
+#  rabbitmq2:
+#    image: $RABBITMQ_IMAGE
+##    platform: linux/amd64
+#    container_name: rabbitmq2
+#    restart: always
+#    depends_on:
+#      - redis
+#    networks:
+#      primihub_net:
+#        ipv4_address: 172.28.1.17
+#
+#  rabbitmq3:
+#    image: $RABBITMQ_IMAGE
+##    platform: linux/amd64
+#    container_name: rabbitmq3
+#    restart: always
+#    depends_on:
+#      - redis
+#    networks:
+#      primihub_net:
+#        ipv4_address: 172.28.1.18
   
   nacos:
     image: $NACOS_IMAGE
