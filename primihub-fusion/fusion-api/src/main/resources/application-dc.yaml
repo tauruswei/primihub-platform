@@ -5,7 +5,7 @@ spring:
     druid:
       driver-class-name: com.mysql.cj.jdbc.Driver
       username: primihub
-      url: jdbc:mysql://mysql:3306/fusion_dc?characterEncoding=UTF-8&zeroDateTimeBehavior=CONVERT_TO_NULL&allowMultiQueries=true&serverTimezone=Asia/Shanghai&useSSL=false
+      url: jdbc:mysql://127.0.0.1:3306/fusion_dc?characterEncoding=UTF-8&zeroDateTimeBehavior=CONVERT_TO_NULL&allowMultiQueries=true&serverTimezone=Asia/Shanghai&useSSL=false
       password: primihub@123
       filter:
         config:

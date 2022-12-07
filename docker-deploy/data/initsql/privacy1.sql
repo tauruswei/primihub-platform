@@ -728,4 +728,60 @@ CREATE TABLE `data_resource_visibility_auth`  (
                                                   INDEX `organ_global_id_ix`(`organ_global_id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 
+-- ----------------------------
+-- Table structure for scd_certificate
+-- ----------------------------
+DROP TABLE IF EXISTS `scd_certificate`;
+CREATE TABLE `scd_certificate` (
+                                  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
+                                  `name` varchar(255) COLLATE utf8_bin DEFAULT NULL COMMENT '保留字段',
+                                  `certificate` blob COMMENT '证书，证书里面包含属性 json',
+                                  `temp_id` bigint(20) DEFAULT NULL COMMENT '模版id',
+                                  `user_id` bigint(20) DEFAULT NULL COMMENT '保留字段，面向终端用户',
+                                  `status` tinyint(1) DEFAULT NULL COMMENT '状态，0表示不可用，1表示可用',
+                                  `cert_path` varchar(255) COLLATE utf8_bin DEFAULT NULL COMMENT '文件路径',
+                                  `create_date` datetime(3) DEFAULT NULL COMMENT '创建时间',
+                                  `update_date` datetime(3) DEFAULT NULL COMMENT '更新时间',
+                                  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- ----------------------------
+-- Table structure for scd_rule
+-- ----------------------------
+DROP TABLE IF EXISTS `scd_rule`;
+CREATE TABLE `scd_rule` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `name` varchar(255) COLLATE utf8_bin DEFAULT NULL,
+  `attr_name` varchar(255) COLLATE utf8_bin DEFAULT NULL COMMENT '属性名称',
+  `type` varchar(2) COLLATE utf8_bin DEFAULT NULL COMMENT '类型，EQ; GE；LE；GT; LT',
+  `value` int(11) DEFAULT NULL,
+  `create_date` datetime(3) DEFAULT NULL COMMENT '创建时间',
+  `update_date` datetime(3) DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- ----------------------------
+-- Table structure for scd_template
+-- ----------------------------
+DROP TABLE IF EXISTS `scd_template`;
+CREATE TABLE `scd_template` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `name` varchar(255) COLLATE utf8_bin DEFAULT NULL COMMENT '保留字段',
+  `attrs` blob COMMENT '模版属性 json',
+  `certificate` blob COMMENT '证书 json',
+  `pri_key` blob COMMENT '密钥 json',
+  `status` tinyint(1) DEFAULT NULL COMMENT '模版状态 0 表示不可用，1表示可用',
+  `temp_path` varchar(255) COLLATE utf8_bin DEFAULT NULL COMMENT '文件路径',
+  `create_date` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_date` datetime DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
 GRANT ALL ON *.* TO 'primihub'@'%';
+

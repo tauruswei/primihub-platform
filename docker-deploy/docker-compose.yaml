@@ -31,6 +31,8 @@ services:
       "redis-server /usr/local/etc/redis/redis.conf"
     depends_on:
       - nacos
+    ports:
+      - "6379:6379"
     networks:
       primihub_net:
         ipv4_address: 172.28.1.15
@@ -42,6 +44,9 @@ services:
     restart: always
     depends_on:
       - redis
+    ports:
+      - "5672:5672"
+      - "15672:15672"
     networks:
       primihub_net:
         ipv4_address: 172.28.1.16
@@ -86,6 +91,21 @@ services:
     networks:
       primihub_net:
         ipv4_address: 172.28.1.19
+
+  nginx1:
+    image: $PRIMIHUB_WEB_MANAGE
+    container_name: manage-web1
+    restart: always
+    volumes:
+      - "./config/default1.conf:/etc/nginx/conf.d/default.conf"
+      - "./data:/data"
+    ports:
+      - "30811:80"
+#    depends_on:
+#      - gateway1
+    networks:
+      primihub_net:
+        ipv4_address: 172.28.1.27
 networks:
   primihub_net:
     driver: bridge

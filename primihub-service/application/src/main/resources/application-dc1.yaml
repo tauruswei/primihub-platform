@@ -1,10 +1,12 @@
 server:
   port: 8090
+#  servlet:
+#    context-path: /sys/
 spring:
   application:
     name: platform
   rabbitmq:
-    host: rabbitmq1
+    host: 192.168.2.150
     port: 5672
     username: guest
     password: guest
@@ -19,11 +21,11 @@ spring:
           group: single
     nacos:
       discovery:
-        server-addr: nacos-server:8848
+        server-addr: 127.0.0.1:8848
         namespace: 46b6b568-e6ae-45ca-baa1-819932fc8947
 nacos:
   config:
-    server-addr: nacos-server:8848
+    server-addr: 127.0.0.1:8848
     namespace: 46b6b568-e6ae-45ca-baa1-819932fc8947
     max-retry: 3
     config-long-poll-timeout: 1000
