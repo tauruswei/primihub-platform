@@ -13,8 +13,7 @@ spring:
     virtual-host: /
   cloud:
     stream:
-      bindings:
-        singleTaskOutput:
+-        singleTaskOutput:
           destination: singlTaskChannel
         singleTaskInput:
           destination: singlTaskChannel
