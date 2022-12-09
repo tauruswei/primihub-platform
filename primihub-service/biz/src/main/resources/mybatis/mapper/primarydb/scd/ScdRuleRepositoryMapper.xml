@@ -10,7 +10,7 @@
         <result property="createDate" column="create_date" jdbcType="TIMESTAMP"/>
         <result property="updateDate" column="update_date" jdbcType="TIMESTAMP"/>
     </resultMap>
-    <insert id="saveRule" parameterType="com.primihub.biz.entity.scd.po.ScdRule">
+    <insert id="saveRule" useGeneratedKeys="true" keyProperty="id" parameterType="com.primihub.biz.entity.scd.po.ScdRule">
         insert into scd_rule (name,attr_name,type ,value,create_date,update_date)
         values (#{name},#{attrName},#{type},#{value},now(),now())
     </insert>

@@ -13,7 +13,7 @@
         <result property="createDate" column="create_date" jdbcType="TIMESTAMP"/>
         <result property="updateDate" column="update_date" jdbcType="TIMESTAMP"/>
     </resultMap>
-    <insert id="saveCertificate" parameterType="com.primihub.biz.entity.scd.po.ScdCertificate">
+    <insert id="saveCertificate" useGeneratedKeys="true" keyProperty="id" parameterType="com.primihub.biz.entity.scd.po.ScdCertificate">
         insert into scd_certificate (name,temp_id,user_id,attrs,status,create_date,update_date)
         values (#{name},#{tempId},#{userId},#{attrs},#{status},now(),now())
     </insert>

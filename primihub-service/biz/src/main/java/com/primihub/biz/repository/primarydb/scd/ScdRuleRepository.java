@@ -1,6 +1,5 @@
 package com.primihub.biz.repository.primarydb.scd;
 
-import com.primihub.biz.entity.scd.po.ScdCertificate;
 import com.primihub.biz.entity.scd.po.ScdRule;
 import org.springframework.stereotype.Repository;
 
