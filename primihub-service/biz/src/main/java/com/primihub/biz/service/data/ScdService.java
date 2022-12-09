@@ -2,6 +2,8 @@ package com.primihub.biz.service.data;
 
 
 import com.alibaba.fastjson.JSON;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.primihub.biz.config.base.BaseConfiguration;
 import com.primihub.biz.constant.ScdConstant;
 import com.primihub.biz.entity.base.BaseResultEntity;
@@ -117,10 +119,17 @@ public class ScdService {
         ScdTemplate scdTemplate = scdTemplateRepository.queryTemplate(tempId);
         return BaseResultEntity.success(scdTemplate);
     }
-    public BaseResultEntity listTemplates( Long userId) {
-        ScdTemplate template = new ScdTemplate();
+    public BaseResultEntity listTemplates( Integer num, Integer limit,Long userId) {
+        if((null!=num)&&(null!=limit)){
+            PageHelper.startPage(num,limit);
+        }else{
+            PageHelper.startPage(0,0);
+        }
         List<ScdTemplate> scdTemplates = scdTemplateRepository.listTemplates();
-        return BaseResultEntity.success(scdTemplates);
+        PageInfo<ScdTemplate> pageInfo = new PageInfo<>(scdTemplates);
+//        return ResultLayui.success(applications,pageInfo.getTotal());
+        return BaseResultEntity.success(pageInfo);
+
     }
 
     public BaseResultEntity updateTemplate(ScdUpdateTemplateReq req, Long userId) {
@@ -151,10 +160,15 @@ public class ScdService {
         ScdCertificate scdCertificate1 = scdCertificateRepository.queryCertificate(certId);
         return BaseResultEntity.success(scdCertificate1);
     }
-
-    public BaseResultEntity listCertificates() {
+    public BaseResultEntity listCertificates( Integer num, Integer limit,Long userId) {
+        if((null!=num)&&(null!=limit)){
+            PageHelper.startPage(num,limit);
+        }else{
+            PageHelper.startPage(0,0);
+        }
         List<ScdCertificate> scdCertificates = scdCertificateRepository.listCertificates();
-        return BaseResultEntity.success(scdCertificates);
+        PageInfo<ScdCertificate> pageInfo = new PageInfo<>(scdCertificates);
+        return BaseResultEntity.success(pageInfo);
     }
 
     public BaseResultEntity queryAttributes(Long certId) {
@@ -174,11 +188,18 @@ public class ScdService {
         //todo
         return BaseResultEntity.success("success");
     }
-    public BaseResultEntity listRules() {
+    public BaseResultEntity listRules( Integer num, Integer limit,Long userId) {
+        if((null!=num)&&(null!=limit)){
+            PageHelper.startPage(num,limit);
+        }else{
+            PageHelper.startPage(0,0);
+        }
         List<ScdRule> scdRules = scdRuleRepository.listRules();
+        PageInfo<ScdRule> pageInfo = new PageInfo<>(scdRules);
+
 //        dataAsyncService.createTemplate(template);
         //todo
-        return BaseResultEntity.success(scdRules);
+        return BaseResultEntity.success(pageInfo);
     }
     public BaseResultEntity queryRule(Long id) {
         ScdRule scdRule = scdRuleRepository.queryRule(id);
