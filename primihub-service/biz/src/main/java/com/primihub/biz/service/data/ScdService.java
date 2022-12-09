@@ -111,7 +111,7 @@ public class ScdService {
         scdTemplateRepository.saveTemplate(template);
         dataAsyncService.createTemplate(template);
         //todo
-        return BaseResultEntity.success("success");
+        return BaseResultEntity.success(template);
     }
 
     public BaseResultEntity queryTemplate(Long tempId, Long userId) {
@@ -139,7 +139,7 @@ public class ScdService {
         template.setPriKey(req.getPriKey());
         template.setStatus(ScdConstant.ACTIVE);
         scdTemplateRepository.updateTemplate(template);
-        return BaseResultEntity.success("success");
+        return BaseResultEntity.success(template);
     }
 
 
@@ -152,7 +152,7 @@ public class ScdService {
         scdCertificate.setAttrs(createCertificateReq.getAttrs());
         scdCertificateRepository.saveCertificate(scdCertificate);
         dataAsyncService.createCertificate(scdCertificate);
-        return BaseResultEntity.success("success");
+        return BaseResultEntity.success(scdCertificate);
     }
 
     public BaseResultEntity queryCertificate(Long certId, Long userId) {
@@ -186,7 +186,7 @@ public class ScdService {
         scdRuleRepository.saveRule(rule);
 //        dataAsyncService.createTemplate(template);
         //todo
-        return BaseResultEntity.success("success");
+        return BaseResultEntity.success(rule);
     }
     public BaseResultEntity listRules( Integer num, Integer limit,Long userId) {
         if((null!=num)&&(null!=limit)){
@@ -216,7 +216,7 @@ public class ScdService {
         scdRule.setValue(req.getValue());
         Long row = scdRuleRepository.updateRule(scdRule);
         // todo 加入 if 语句的判断
-        return BaseResultEntity.success("success");
+        return BaseResultEntity.success(scdRule);
     }
     public BaseResultEntity listRulesArray(List<Long> ids) {
         List<ScdRule> scdRules = scdRuleRepository.listRulesArray(ids);
