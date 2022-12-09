@@ -735,6 +735,7 @@ DROP TABLE IF EXISTS `scd_certificate`;
 CREATE TABLE `scd_certificate` (
                                   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
                                   `name` varchar(255) COLLATE utf8_bin DEFAULT NULL COMMENT '保留字段',
+                                  `attrs` blob COMMENT '证书属性',
                                   `certificate` blob COMMENT '证书，证书里面包含属性 json',
                                   `temp_id` bigint(20) DEFAULT NULL COMMENT '模版id',
                                   `user_id` bigint(20) DEFAULT NULL COMMENT '保留字段，面向终端用户',
