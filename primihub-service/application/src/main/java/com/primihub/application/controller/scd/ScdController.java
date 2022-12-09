@@ -45,6 +45,19 @@ public class ScdController {
         }
         return scdService.queryTemplate(tempId,userId);
     }
+    @GetMapping("listTemplates")
+    public BaseResultEntity listTemplates(@RequestHeader("userId") Long userId){
+        // 参数校验
+//        if (StringUtils.isBlank(req.getName()))
+//            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"templateName");
+//        if (StringUtils.isBlank(req.getAttrs()))
+//            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"attrs");
+//
+//        if (userId == null || userId == 0L) {
+//            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "userId");
+//        }
+        return scdService.listTemplates(userId);
+    }
     @PostMapping("updateTemplate")
     public BaseResultEntity updateTemplate(@RequestHeader("userId") Long userId,
                                            @RequestBody ScdUpdateTemplateReq req){
@@ -74,7 +87,7 @@ public class ScdController {
         return scdService.createCertificate(req,userId);
     }
     @GetMapping("queryCertificate/{certId}")
-    public BaseResultEntity queryCertificat(@RequestHeader("userId") Long userId,
+    public BaseResultEntity queryCertificate(@RequestHeader("userId") Long userId,
                                           @PathVariable Long certId){
         // 参数校验
 //        if (StringUtils.isBlank(req.getName()))
@@ -128,7 +141,7 @@ public class ScdController {
      * 创建规则
      */
     @PostMapping("createRule")
-    public BaseResultEntity listCertificates(@RequestHeader("userId") Long userId,
+    public BaseResultEntity createRule(@RequestHeader("userId") Long userId,
                                              @RequestBody ScdCreateRuleReq req){
         // 参数校验
 //        if (StringUtils.isBlank(req.getName()))
@@ -149,7 +162,7 @@ public class ScdController {
      * 创建规则
      */
     @PostMapping("listRulesArray")
-    public BaseResultEntity listCertificates(@RequestHeader("userId") Long userId,
+    public BaseResultEntity listRulesArray(@RequestHeader("userId") Long userId,
                                              @RequestParam(value= "ids") List<Long> ids){
         // 参数校验
 //        if (StringUtils.isBlank(req.getName()))

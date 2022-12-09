@@ -117,6 +117,11 @@ public class ScdService {
         ScdTemplate scdTemplate = scdTemplateRepository.queryTemplate(tempId);
         return BaseResultEntity.success(scdTemplate);
     }
+    public BaseResultEntity listTemplates( Long userId) {
+        ScdTemplate template = new ScdTemplate();
+        List<ScdTemplate> scdTemplates = scdTemplateRepository.listTemplates();
+        return BaseResultEntity.success(scdTemplates);
+    }
 
     public BaseResultEntity updateTemplate(ScdUpdateTemplateReq req, Long userId) {
         ScdTemplate template = new ScdTemplate();

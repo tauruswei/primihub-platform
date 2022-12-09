@@ -33,4 +33,9 @@
         from scd_template
         where id = #{id}
     </select>
+    <select id="listTemplates" resultMap="ScdTemplateResult">
+        select
+        id,name,attrs,certificate,pri_key,status,temp_path,create_date,update_date
+        from scd_template
+    </select>
 </mapper>
