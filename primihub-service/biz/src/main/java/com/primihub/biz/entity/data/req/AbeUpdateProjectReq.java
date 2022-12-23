@@ -3,10 +3,10 @@ package com.primihub.biz.entity.data.req;
 import lombok.Data;
 
 @Data
-public class ScdUpdateTemplateReq {
+public class AbeUpdateProjectReq {
     private Long id;
-    private String certificate;
-    private String priKey;
+    private String msk;
+    private String pk;
     private String path;
 }
 

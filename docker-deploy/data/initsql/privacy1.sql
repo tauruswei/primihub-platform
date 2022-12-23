@@ -784,5 +784,59 @@ CREATE TABLE `scd_template` (
 
 SET FOREIGN_KEY_CHECKS = 1;
 
+-- ----------------------------
+-- Table structure for cp_abe_cipher
+-- ----------------------------
+DROP TABLE IF EXISTS `cp_abe_cipher`;
+CREATE TABLE `cp_abe_cipher` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键 project id\n',
+  `project_id` bigint(20) DEFAULT NULL COMMENT 'project id',
+  `policy` varchar(255) COLLATE utf8_bin DEFAULT NULL COMMENT '属性 策略',
+  `plain_text` blob COMMENT '明文',
+  `cipher_text` blob COMMENT '密文',
+  `status` tinyint(1) DEFAULT NULL COMMENT '模版状态 0 表示加密 fail，1表示加密成功\n',
+  `path` varchar(255) COLLATE utf8_bin DEFAULT NULL COMMENT '密文路径',
+  `create_date` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_date` datetime DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+SET FOREIGN_KEY_CHECKS = 1;
+-- ----------------------------
+-- Table structure for cp_abe_project
+-- ----------------------------
+DROP TABLE IF EXISTS `cp_abe_project`;
+CREATE TABLE `cp_abe_project` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键 project id\n',
+  `name` varchar(255) COLLATE utf8_bin DEFAULT NULL COMMENT 'project name\n',
+  `path` varchar(255) COLLATE utf8_bin DEFAULT NULL COMMENT '文件路径',
+  `pk` blob COMMENT '公钥',
+  `msk` blob COMMENT '主密钥',
+  `status` tinyint(1) DEFAULT NULL COMMENT '模版状态 0 表示不可用，1表示可用\n',
+  `create_date` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_date` datetime DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+SET FOREIGN_KEY_CHECKS = 1;
+-- ----------------------------
+-- Table structure for cp_abe_user_key
+-- ----------------------------
+DROP TABLE IF EXISTS `cp_abe_user_key`;
+CREATE TABLE `cp_abe_user_key` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'Sk id\n',
+  `project_id` bigint(20) NOT NULL COMMENT 'project id\n',
+  `user_id` bigint(20) DEFAULT NULL COMMENT '用户 id',
+  `attrs` varchar(255) COLLATE utf8_bin DEFAULT NULL COMMENT '用户属性',
+  `path` varchar(255) COLLATE utf8_bin DEFAULT NULL COMMENT '文件路径',
+  `sk` blob COMMENT '用户 密钥',
+  `status` tinyint(1) DEFAULT NULL COMMENT '模版状态 0 表示不可用，1表示可用\n',
+  `create_date` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_date` datetime DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
 GRANT ALL ON *.* TO 'primihub'@'%';
 

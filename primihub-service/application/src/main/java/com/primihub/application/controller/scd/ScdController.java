@@ -4,7 +4,7 @@ import com.alibaba.cloud.commons.lang.StringUtils;
 import com.primihub.biz.entity.base.BaseResultEntity;
 import com.primihub.biz.entity.base.BaseResultEnum;
 import com.primihub.biz.entity.data.req.*;
-import com.primihub.biz.service.data.ScdService;
+import com.primihub.biz.service.scd.ScdService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

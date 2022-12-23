@@ -8,6 +8,7 @@ import com.primihub.biz.config.base.OrganConfiguration;
 import com.primihub.biz.config.mq.SingleTaskChannel;
 import com.primihub.biz.constant.DataConstant;
 import com.primihub.biz.constant.ScdConstant;
+import com.primihub.biz.entity.abe.po.AbeProject;
 import com.primihub.biz.entity.base.BaseFunctionHandleEntity;
 import com.primihub.biz.entity.base.BaseFunctionHandleEnum;
 import com.primihub.biz.entity.base.BaseResultEntity;
@@ -24,6 +25,7 @@ import com.primihub.biz.entity.scd.po.ScdCertificate;
 import com.primihub.biz.entity.scd.po.ScdTemplate;
 import com.primihub.biz.entity.sys.po.SysUser;
 import com.primihub.biz.grpc.client.WorkGrpcClient;
+import com.primihub.biz.repository.primarydb.abe.AbeProjectRepository;
 import com.primihub.biz.repository.primarydb.data.DataModelPrRepository;
 import com.primihub.biz.repository.primarydb.data.DataPsiPrRepository;
 import com.primihub.biz.repository.primarydb.data.DataReasoningPrRepository;
@@ -37,11 +39,11 @@ import com.primihub.biz.service.sys.SysEmailService;
 import com.primihub.biz.util.DataUtil;
 import com.primihub.biz.util.FileUtil;
 import com.primihub.biz.util.FreemarkerUtil;
-import com.primihub.biz.util.ZipUtils;
 import com.primihub.biz.util.crypt.DateUtil;
 import com.primihub.biz.util.snowflake.SnowflakeId;
 import java_worker.PushTaskReply;
 import java_worker.PushTaskRequest;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -49,17 +51,13 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.jdbc.core.metadata.TableMetaDataProvider;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 import primihub.rpc.Common;
 
-import javax.xml.ws.soap.Addressing;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
@@ -117,6 +115,8 @@ public class DataAsyncService implements ApplicationContextAware {
     private ScdTemplateRepository scdTemplateRepository;
     @Autowired
     private ScdCertificateRepository scdCertificateRepository;
+    @Autowired
+    private AbeProjectRepository abeProjectRepository;
 
     public BaseResultEntity executeBeanMethod(boolean isCheck, DataComponentReq req, ComponentTaskReq taskReq) {
         String baenName = req.getComponentCode() + DataConstant.COMPONENT_BEAN_NAME_SUFFIX;
@@ -307,6 +307,70 @@ public class DataAsyncService implements ApplicationContextAware {
         updateTaskState(dataTask);
     }
 
+    @Async
+    public void setup(AbeProject abeProject) {
+        Date date = new Date();
+        StringBuilder sb = new StringBuilder().append(baseConfiguration.getResultUrlDirPrefix()).append("scd_template").append(DateUtil.formatDate(date, DateUtil.DateStyle.HOUR_FORMAT_SHORT.getFormat())).append("/").append(abeProject.getId());
+        // todo 模版 和 密钥 最好分开
+
+        Common.ParamValue templateFilePath = Common.ParamValue.newBuilder().setValueString(sb.toString()).build();
+//        Common.ParamValue certFilePath=Common.ParamValue.newBuilder().setValueString(sb.toString()).build();
+//        Common.ParamValue priKeyFilePath=Common.ParamValue.newBuilder().setValueString(psiTask.getFilePath()).build();
+        Common.Params params = Common.Params.newBuilder()
+                .putParamMap("outputFullFilename", templateFilePath)
+//                .putParamMap("certFilePath",clientDataParamValue)
+//                .putParamMap("priKeyFilePath",serverDataParamValue)
+                .build();
+        PushTaskReply reply = null;
+        try {
+
+            Common.Task task = Common.Task.newBuilder()
+                    .setType(Common.TaskType.ABE_TASK)
+                    .setParams(params)
+                    .setName("setup")
+                    .setLanguage(Common.Language.JAVA)
+//                    .setCode("import sys;")
+                    .setJobId(ByteString.copyFrom(abeProject.getId().toString().getBytes(StandardCharsets.UTF_8)))
+//                    .setTaskId(ByteString.copyFrom(abeProject.getId().toString().getBytes(StandardCharsets.UTF_8)))
+//                    .addInputDatasets("setup")
+//                    .addInputDatasets(template.getAttrs())
+                    .build();
+            log.info("grpc Common.Task : \n{}", task.toString());
+            PushTaskRequest request = PushTaskRequest.newBuilder()
+                    .setIntendedWorkerId(ByteString.copyFrom("1".getBytes(StandardCharsets.UTF_8)))
+                    .setTask(task)
+                    .setSequenceNumber(11)
+                    .setClientProcessedUpTo(22)
+                    .build();
+            reply = workGrpcClient.run(o -> o.submitTask(request));
+            log.info("grpc结果:" + reply);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.info("grpc Exception:{}", e.getMessage());
+        }
+        // 读取文件并更新数据库
+        try {
+            // 读取文件
+            File file = new File(sb.toString());
+            String str = FileUtils.readFileToString(file);
+
+            // 解析文件
+
+            // 更新数据库
+            abeProject.setStatus(ScdConstant.ACTIVE);
+//            template.setCertificate();
+//            template.setPriKey();
+            abeProject.setPath(sb.toString());
+            Long i = abeProjectRepository.updateProject(abeProject);
+            //todo 捕获异常
+//            if (i!=null && i==0L){
+//
+//            }
+        } catch (Exception e) {
+            //todo 捕获异常
+            log.info(" Exception:{}", e.getMessage());
+        }
+    }
 
     @Async
     public void createTemplate(ScdTemplate template) {
