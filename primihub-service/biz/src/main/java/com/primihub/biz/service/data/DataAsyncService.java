@@ -8,7 +8,9 @@ import com.primihub.biz.config.base.OrganConfiguration;
 import com.primihub.biz.config.mq.SingleTaskChannel;
 import com.primihub.biz.constant.DataConstant;
 import com.primihub.biz.constant.ScdConstant;
+import com.primihub.biz.entity.abe.po.AbeCipher;
 import com.primihub.biz.entity.abe.po.AbeProject;
+import com.primihub.biz.entity.abe.po.AbeUserKey;
 import com.primihub.biz.entity.base.BaseFunctionHandleEntity;
 import com.primihub.biz.entity.base.BaseFunctionHandleEnum;
 import com.primihub.biz.entity.base.BaseResultEntity;
@@ -25,7 +27,9 @@ import com.primihub.biz.entity.scd.po.ScdCertificate;
 import com.primihub.biz.entity.scd.po.ScdTemplate;
 import com.primihub.biz.entity.sys.po.SysUser;
 import com.primihub.biz.grpc.client.WorkGrpcClient;
+import com.primihub.biz.repository.primarydb.abe.AbeCipherRepository;
 import com.primihub.biz.repository.primarydb.abe.AbeProjectRepository;
+import com.primihub.biz.repository.primarydb.abe.AbeUserKeyRepository;
 import com.primihub.biz.repository.primarydb.data.DataModelPrRepository;
 import com.primihub.biz.repository.primarydb.data.DataPsiPrRepository;
 import com.primihub.biz.repository.primarydb.data.DataReasoningPrRepository;
@@ -43,7 +47,6 @@ import com.primihub.biz.util.crypt.DateUtil;
 import com.primihub.biz.util.snowflake.SnowflakeId;
 import java_worker.PushTaskReply;
 import java_worker.PushTaskRequest;
-
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -117,6 +120,10 @@ public class DataAsyncService implements ApplicationContextAware {
     private ScdCertificateRepository scdCertificateRepository;
     @Autowired
     private AbeProjectRepository abeProjectRepository;
+    @Autowired
+    private AbeCipherRepository abeCipherRepository;
+    @Autowired
+    private AbeUserKeyRepository abeUserKeyRepository;
 
     public BaseResultEntity executeBeanMethod(boolean isCheck, DataComponentReq req, ComponentTaskReq taskReq) {
         String baenName = req.getComponentCode() + DataConstant.COMPONENT_BEAN_NAME_SUFFIX;
@@ -310,7 +317,7 @@ public class DataAsyncService implements ApplicationContextAware {
     @Async
     public void setup(AbeProject abeProject) {
         Date date = new Date();
-        StringBuilder sb = new StringBuilder().append(baseConfiguration.getResultUrlDirPrefix()).append("scd_template").append(DateUtil.formatDate(date, DateUtil.DateStyle.HOUR_FORMAT_SHORT.getFormat())).append("/").append(abeProject.getId());
+        StringBuilder sb = new StringBuilder().append(baseConfiguration.getResultUrlDirPrefix()).append("abe").append(DateUtil.formatDate(date, DateUtil.DateStyle.HOUR_FORMAT_SHORT.getFormat())).append("_").append(abeProject.getId()).append(".json");
         // todo 模版 和 密钥 最好分开
 
         Common.ParamValue templateFilePath = Common.ParamValue.newBuilder().setValueString(sb.toString()).build();
@@ -324,16 +331,88 @@ public class DataAsyncService implements ApplicationContextAware {
         PushTaskReply reply = null;
         try {
 
+            class SetupParams {
+                public String project_id;
+            }
+            SetupParams setupParams = new SetupParams();
+            setupParams.project_id = abeProject.getId().toString();
+
             Common.Task task = Common.Task.newBuilder()
                     .setType(Common.TaskType.ABE_TASK)
                     .setParams(params)
-                    .setName("setup")
+//                    .setName("setup")
                     .setLanguage(Common.Language.JAVA)
 //                    .setCode("import sys;")
                     .setJobId(ByteString.copyFrom(abeProject.getId().toString().getBytes(StandardCharsets.UTF_8)))
 //                    .setTaskId(ByteString.copyFrom(abeProject.getId().toString().getBytes(StandardCharsets.UTF_8)))
-//                    .addInputDatasets("setup")
-//                    .addInputDatasets(template.getAttrs())
+                    .addInputDatasets("setup")
+                    .addInputDatasets(JSON.toJSONString(setupParams))
+                    .build();
+            log.info("grpc Common.Task : \n{}", task.toString());
+            PushTaskRequest request = PushTaskRequest.newBuilder()
+                    .setIntendedWorkerId(ByteString.copyFrom("1".getBytes(StandardCharsets.UTF_8)))
+                    .setTask(task)
+                    .setSequenceNumber(11)
+                    .setClientProcessedUpTo(22)
+                    .build();
+            reply = workGrpcClient.run(o -> o.submitTask(request));
+            log.info("grpc结果:" + reply);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.info("grpc Exception:{}", e.getMessage());
+        }
+        // 读取文件并更新数据库
+        try {
+            // 读取文件
+            File file = new File(sb.toString());
+            String str = FileUtils.readFileToString(file);
+
+            // 解析文件
+            JSONObject jsonObject = JSON.parseObject(str);
+
+            // 更新数据库
+            abeProject.setStatus(ScdConstant.ACTIVE);
+            abeProject.setPk(jsonObject.getString("pk"));
+            abeProject.setMsk(jsonObject.getString("msk"));
+            abeProject.setPath(sb.toString());
+            Long i = abeProjectRepository.updateProject(abeProject);
+        } catch (Exception e) {
+            //todo 捕获异常
+            log.info(" Exception:{}", e.getMessage());
+        }
+    }
+
+    @Async
+    public void encrypt(AbeCipher abeCipher, String pk) {
+        Date date = new Date();
+        StringBuilder sb = new StringBuilder().append(baseConfiguration.getResultUrlDirPrefix()).append("abe").append(DateUtil.formatDate(date, DateUtil.DateStyle.HOUR_FORMAT_SHORT.getFormat())).append("_").append(abeCipher.getId()).append(".json");
+        // todo 模版 和 密钥 最好分开
+
+        Common.ParamValue templateFilePath = Common.ParamValue.newBuilder().setValueString(sb.toString()).build();
+        Common.Params params = Common.Params.newBuilder()
+                .putParamMap("outputFullFilename", templateFilePath)
+                .build();
+        PushTaskReply reply = null;
+        try {
+
+            class EncryptParams {
+               public String pk;
+               public String plaintext;
+               public String policy;
+            }
+            EncryptParams encryptParams = new EncryptParams();
+            encryptParams.pk = pk;
+            encryptParams.plaintext = abeCipher.getPlainText();
+            encryptParams.policy = abeCipher.getPolicy();
+
+            Common.Task task = Common.Task.newBuilder()
+                    .setType(Common.TaskType.ABE_TASK)
+                    .setParams(params)
+                    .setName("encrypt")
+                    .setLanguage(Common.Language.JAVA)
+                    .setJobId(ByteString.copyFrom(abeCipher.getId().toString().getBytes(StandardCharsets.UTF_8)))
+                    .addInputDatasets("encrypt")
+                    .addInputDatasets(JSON.toJSONString(encryptParams))
                     .build();
             log.info("grpc Common.Task : \n{}", task.toString());
             PushTaskRequest request = PushTaskRequest.newBuilder()
@@ -357,11 +436,11 @@ public class DataAsyncService implements ApplicationContextAware {
             // 解析文件
 
             // 更新数据库
-            abeProject.setStatus(ScdConstant.ACTIVE);
-//            template.setCertificate();
-//            template.setPriKey();
-            abeProject.setPath(sb.toString());
-            Long i = abeProjectRepository.updateProject(abeProject);
+            abeCipher.setStatus(ScdConstant.ACTIVE);
+            abeCipher.setCipherText(str);
+            abeCipher.setPath(sb.toString());
+            System.out.println("ciphertext = "+Base64.getEncoder().encodeToString(str.getBytes()));
+            Long i = abeCipherRepository.updateCipher(abeCipher);
             //todo 捕获异常
 //            if (i!=null && i==0L){
 //
@@ -371,6 +450,134 @@ public class DataAsyncService implements ApplicationContextAware {
             log.info(" Exception:{}", e.getMessage());
         }
     }
+
+    @Async
+    public void keygen(Long projectId, AbeUserKey abeUserKey, Long userId, List<String> attrs) {
+        Date date = new Date();
+        StringBuilder sb = new StringBuilder().append(baseConfiguration.getResultUrlDirPrefix()).append("abe").append(DateUtil.formatDate(date, DateUtil.DateStyle.HOUR_FORMAT_SHORT.getFormat())).append("_").append(abeUserKey.getId()).append(".json");
+        // todo 模版 和 密钥 最好分开
+
+        Common.ParamValue templateFilePath = Common.ParamValue.newBuilder().setValueString(sb.toString()).build();
+        Common.Params params = Common.Params.newBuilder()
+                .putParamMap("outputFullFilename", templateFilePath)
+                .build();
+        PushTaskReply reply = null;
+        try {
+
+            class KeyGenParams {
+                public String project_id;
+                public String[] attributes;
+            }
+            KeyGenParams kekgenParams = new KeyGenParams();
+            kekgenParams.project_id = projectId.toString();
+            kekgenParams.attributes = new String[attrs.size()];
+            for (int i = 0; i < attrs.size(); i++) {
+                kekgenParams.attributes[i] = attrs.get(i);
+            }
+//            kekgenParams.attributes = attrs;
+
+            Common.Task task = Common.Task.newBuilder()
+                    .setType(Common.TaskType.ABE_TASK)
+                    .setParams(params)
+                    .setName("keygen")
+                    .setLanguage(Common.Language.JAVA)
+                    .setJobId(ByteString.copyFrom(abeUserKey.getId().toString().getBytes(StandardCharsets.UTF_8)))
+                    .addInputDatasets("keygen")
+                    .addInputDatasets(JSON.toJSONString(kekgenParams))
+                    .build();
+            log.info("grpc Common.Task : \n{}", task.toString());
+            PushTaskRequest request = PushTaskRequest.newBuilder()
+                    .setIntendedWorkerId(ByteString.copyFrom("1".getBytes(StandardCharsets.UTF_8)))
+                    .setTask(task)
+                    .setSequenceNumber(11)
+                    .setClientProcessedUpTo(22)
+                    .build();
+            reply = workGrpcClient.run(o -> o.submitTask(request));
+            log.info("grpc结果:" + reply);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.info("grpc Exception:{}", e.getMessage());
+        }
+        // 读取文件并更新数据库
+        try {
+            // 读取文件
+            File file = new File(sb.toString());
+            String str = FileUtils.readFileToString(file);
+
+            // 解析文件
+
+            // 更新数据库
+            abeUserKey.setStatus(ScdConstant.ACTIVE);
+            abeUserKey.setSk(str);
+            System.out.println("sk = "+Base64.getEncoder().encodeToString(str.getBytes()));
+            abeUserKey.setPath(sb.toString());
+            Long i = abeUserKeyRepository.updateUserKey(abeUserKey);
+            //todo 捕获异常
+//            if (i!=null && i==0L){
+//
+//            }
+        } catch (Exception e) {
+            //todo 捕获异常
+            log.info(" Exception:{}", e.getMessage());
+        }
+    }
+    public String decrypt(String sk,String ciphertext) {
+        String plaintext = "";
+        Date date = new Date();
+        StringBuilder sb = new StringBuilder().append(baseConfiguration.getResultUrlDirPrefix()).append("abe").append(DateUtil.formatDate(date, DateUtil.DateStyle.HOUR_FORMAT_SHORT.getFormat())).append("_").append("decrypt").append(".json");
+//         todo 模版 和 密钥 最好分开
+
+        Common.ParamValue templateFilePath = Common.ParamValue.newBuilder().setValueString(sb.toString()).build();
+        Common.Params params = Common.Params.newBuilder()
+                .putParamMap("outputFullFilename", templateFilePath)
+                .build();
+        PushTaskReply reply = null;
+        try {
+
+            class DecreptParams {
+                public String sk;
+                public String ciphertext;
+            }
+            DecreptParams decreptParams = new DecreptParams();
+            decreptParams.sk = sk;
+            decreptParams.ciphertext = ciphertext;
+
+            Common.Task task = Common.Task.newBuilder()
+                    .setType(Common.TaskType.ABE_TASK)
+                    .setParams(params)
+                    .setName("decrypt")
+                    .setLanguage(Common.Language.JAVA)
+                    .setJobId(ByteString.copyFrom(sk.getBytes(StandardCharsets.UTF_8)))
+                    .addInputDatasets("decrypt")
+                    .addInputDatasets(JSON.toJSONString(decreptParams))
+                    .build();
+            log.info("grpc Common.Task : \n{}", task.toString());
+            PushTaskRequest request = PushTaskRequest.newBuilder()
+                    .setIntendedWorkerId(ByteString.copyFrom("1".getBytes(StandardCharsets.UTF_8)))
+                    .setTask(task)
+                    .setSequenceNumber(11)
+                    .setClientProcessedUpTo(22)
+                    .build();
+            reply = workGrpcClient.run(o -> o.submitTask(request));
+            log.info("grpc结果:" + reply);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.info("grpc Exception:{}", e.getMessage());
+        }
+        // 读取文件并更新数据库
+        try {
+            // 读取文件
+            File file = new File(sb.toString());
+            plaintext = FileUtils.readFileToString(file);
+
+            file.delete();
+        } catch (Exception e) {
+            //todo 捕获异常
+            log.info(" Exception:{}", e.getMessage());
+        }
+        return plaintext;
+    }
+
 
     @Async
     public void createTemplate(ScdTemplate template) {
@@ -502,7 +709,7 @@ public class DataAsyncService implements ApplicationContextAware {
 
 
     @Async
-    public void verify(ScdVerifyReq req,List<String> rules) {
+    public void verify(ScdVerifyReq req, List<String> rules) {
         PushTaskReply reply = null;
         try {
             Common.Task task = Common.Task.newBuilder()

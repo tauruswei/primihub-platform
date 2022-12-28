@@ -27,4 +27,17 @@ public class DataUtil {
     public static boolean isEmail(String email){
         return Pattern.compile(EMAIL_PATTERN).matcher(email).find();
     }
+
+    public static String trimFirstAndLastChar(String str, String element){
+        boolean beginIndexFlag = true;
+        boolean endIndexFlag = true;
+        do{
+            int beginIndex = str.indexOf(element) == 0 ? 1 : 0;
+            int endIndex = str.lastIndexOf(element) + 1 == str.length() ? str.lastIndexOf(element) : str.length();
+            str = str.substring(beginIndex, endIndex);
+            beginIndexFlag = (str.indexOf(element) == 0);
+            endIndexFlag = (str.lastIndexOf(element) + 1 == str.length());
+        } while (beginIndexFlag || endIndexFlag);
+        return str;
+    }
 }

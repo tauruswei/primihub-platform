@@ -8,6 +8,7 @@ import com.primihub.biz.entity.abe.po.AbeCipher;
 import com.primihub.biz.entity.abe.po.AbeProject;
 import com.primihub.biz.entity.abe.po.AbeUserKey;
 import com.primihub.biz.entity.base.BaseResultEntity;
+import com.primihub.biz.entity.base.BaseResultEnum;
 import com.primihub.biz.entity.data.req.*;
 import com.primihub.biz.repository.primarydb.abe.AbeCipherRepository;
 import com.primihub.biz.repository.primarydb.abe.AbeProjectRepository;
@@ -17,7 +18,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Base64;
 import java.util.List;
+
+import static com.primihub.biz.util.DataUtil.trimFirstAndLastChar;
 
 @Service
 @Slf4j
@@ -81,6 +85,11 @@ public class AbeService {
     }
 //
     public BaseResultEntity encrypt(AbeEncryptReq req, Long userId) {
+        AbeProject abeProject = new AbeProject();
+        abeProject = abeProjectRepository.queryProject(req.getProjectId());
+        if (abeProject==null){
+            return BaseResultEntity.failure(BaseResultEnum.DATA_QUERY_NULL,"projectId = "+req.getProjectId());
+        }
         AbeCipher abeCipher = new AbeCipher();
         abeCipher.setProjectId(req.getProjectId());
         abeCipher.setPolicy(req.getPolicy());
@@ -88,7 +97,7 @@ public class AbeService {
         abeCipher.setStatus(ScdConstant.INACTIVE);
         abeCipherRepository.saveCipher(abeCipher);
         //todo
-//        dataAsyncService.createCertificate(abeCipher);
+        dataAsyncService.encrypt(abeCipher,abeProject.getPk());
         return BaseResultEntity.success(abeCipher);
     }
     //
@@ -127,7 +136,7 @@ public class AbeService {
         abeUserKey.setStatus(ScdConstant.INACTIVE);
         abeUserKeyRepository.saveUserKey(abeUserKey);
         //todo
-//        dataAsyncService.createCertificate(abeCipher);
+        dataAsyncService.keygen(abeProject.getId(),abeUserKey,abeUserKey.getUserId(),req.getAttrs());
         return BaseResultEntity.success(abeUserKey);
     }
     //
@@ -159,7 +168,13 @@ public class AbeService {
     public BaseResultEntity decrypt(AbeDecryptReq req, Long userId) {
         System.out.println(req.getSk());
         System.out.println(req.getCipherText());
-        return BaseResultEntity.success("hello world");
+//        byte[] decode = Base64.getDecoder().decode(req.getSk());
+//        System.out.println(new String(decode));
+//        System.out.println(Base64.getDecoder().decode(req.getSk()));
+//        System.out.println(Base64.getDecoder().decode(req.getCipherText()));
+        String decrypt = dataAsyncService.decrypt(new String(Base64.getDecoder().decode(req.getSk())), new String(Base64.getDecoder().decode(req.getCipherText())));
+        String s = trimFirstAndLastChar(decrypt, "\"");
+        return BaseResultEntity.success(s);
     }
 
 }
