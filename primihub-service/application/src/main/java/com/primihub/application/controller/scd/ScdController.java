@@ -25,7 +25,7 @@ public class ScdController {
         // 参数校验
 //        if (StringUtils.isBlank(req.getName()))
 //            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"templateName");
-        if (StringUtils.isBlank(req.getAttrs()))
+        if (req.getAttrs().isEmpty())
             return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "attrs");
         return scdService.createTemplate(req, userId);
     }
@@ -87,7 +87,7 @@ public class ScdController {
         // 参数校验
 //        if (StringUtils.isBlank(req.getName()))
 //            return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM,"name");
-        if (StringUtils.isBlank(req.getAttrs()))
+        if (req.getAttrs().isEmpty())
             return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "attrs");
         if (req.getTempId() == null || req.getTempId() == 0L)
             return BaseResultEntity.failure(BaseResultEnum.LACK_OF_PARAM, "tempId");

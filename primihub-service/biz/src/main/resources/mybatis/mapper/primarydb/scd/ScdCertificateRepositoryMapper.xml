@@ -7,6 +7,7 @@
         <result property="userId" column="pri_key" jdbcType="BIGINT"/>
         <result property="name" column="name" jdbcType="VARCHAR"/>
         <result property="certificate" column="certificate" jdbcType="BLOB"/>
+        <result property="priKey" column="pri_key" jdbcType="BLOB"/>
         <result property="attrs" column="attrs" jdbcType="BLOB"/>
         <result property="status" column="status" jdbcType="TINYINT"/>
         <result property="certPath" column="cert_path" jdbcType="VARCHAR"/>
@@ -24,7 +25,7 @@
     </select>
     <select id="queryCertificate" resultMap="ScdCertificateResult">
         select
-        id,name,temp_id,user_id,certificate,status,cert_path,create_date,update_date
+        id,name,temp_id,user_id,certificate,pri_key,status,cert_path,create_date,update_date
         from scd_certificate
         where id = #{id}
     </select>
@@ -34,6 +35,7 @@
             <if test="certificate!=null">certificate = #{certificate},</if>
             <if test="status!=null">status = #{status},</if>
             <if test="certPath!=null">cert_path = #{tempPath},</if>
+            <if test="priKey!=null">pri_key = #{priKey},</if>
             update_date = now()
         </set>
         where id = #{id}

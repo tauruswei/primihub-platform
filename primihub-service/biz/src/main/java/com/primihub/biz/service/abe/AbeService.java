@@ -13,7 +13,6 @@ import com.primihub.biz.entity.data.req.*;
 import com.primihub.biz.repository.primarydb.abe.AbeCipherRepository;
 import com.primihub.biz.repository.primarydb.abe.AbeProjectRepository;
 import com.primihub.biz.repository.primarydb.abe.AbeUserKeyRepository;
-import com.primihub.biz.service.data.DataAsyncService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,7 +26,7 @@ import static com.primihub.biz.util.DataUtil.trimFirstAndLastChar;
 @Slf4j
 public class AbeService {
     @Autowired
-    private DataAsyncService dataAsyncService;
+    private AbeAsyncService dataAsyncService;
     @Autowired
     private AbeProjectRepository abeProjectRepository;
     @Autowired

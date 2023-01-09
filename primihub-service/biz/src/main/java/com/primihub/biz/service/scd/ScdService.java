@@ -14,7 +14,6 @@ import com.primihub.biz.entity.scd.po.ScdTemplate;
 import com.primihub.biz.repository.primarydb.scd.ScdCertificateRepository;
 import com.primihub.biz.repository.primarydb.scd.ScdRuleRepository;
 import com.primihub.biz.repository.primarydb.scd.ScdTemplateRepository;
-import com.primihub.biz.service.data.DataAsyncService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,16 +24,8 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class ScdService {
-//    @Autowired
-//    private BaseConfiguration baseConfiguration;
-//    @Autowired
-//    private FusionResourceService fusionResourceService;
-//    @Autowired
-//    private DataTaskPrRepository dataTaskPrRepository;
-//    @Autowired
-//    private DataTaskRepository dataTaskRepository;
-//    @Autowired
-    private DataAsyncService dataAsyncService;
+    @Autowired
+    private ScdAsyncService dataAsyncService;
     @Autowired
     private ScdTemplateRepository scdTemplateRepository;
     @Autowired
@@ -42,72 +33,13 @@ public class ScdService {
     @Autowired
     private ScdRuleRepository scdRuleRepository;
 
-//    public String getResultFilePath(String taskId, String taskDate) {
-//        return new StringBuilder().append(baseConfiguration.getResultUrlDirPrefix()).append(taskDate).append("/").append(taskId).append(".csv").toString();
-//    }
-//    public BaseResultEntity pirSubmitTask(String serverAddress,String resourceId, String pirParam) {
-//        BaseResultEntity dataResource = fusionResourceService.getDataResource(serverAddress, resourceId);
-//        if (dataResource.getCode()!=0)
-//            return BaseResultEntity.failure(BaseResultEnum.DATA_RUN_TASK_FAIL,"资源查询失败");
-//        Map<String, Object> pirDataResource = (LinkedHashMap)dataResource.getResult();
-//        int available = Integer.parseInt(pirDataResource.getOrDefault("available","1").toString());
-//        if (available == 1)
-//            return BaseResultEntity.failure(BaseResultEnum.DATA_RUN_TASK_FAIL,"资源不可用");
-//        DataTask dataTask = new DataTask();
-////        dataTask.setTaskIdName(UUID.randomUUID().toString());
-//        dataTask.setTaskIdName(Long.toString(SnowflakeId.getInstance().nextId()));
-//        dataTask.setTaskName(pirDataResource.get("resourceName").toString());
-//        dataTask.setTaskState(TaskStateEnum.IN_OPERATION.getStateType());
-//        dataTask.setTaskType(TaskTypeEnum.PIR.getTaskType());
-//        dataTask.setTaskStartTime(System.currentTimeMillis());
-//        dataTaskPrRepository.saveDataTask(dataTask);
-//        DataPirTask dataPirTask = new DataPirTask();
-//        dataPirTask.setTaskId(dataTask.getTaskId());
-//        dataPirTask.setServerAddress(serverAddress);
-//        dataPirTask.setRetrievalId(pirParam);
-//        dataPirTask.setProviderOrganName(pirDataResource.get("organName").toString());
-//        dataPirTask.setResourceName(pirDataResource.get("resourceName").toString());
-//        dataPirTask.setResourceId(resourceId);
-//        dataTaskPrRepository.saveDataPirTask(dataPirTask);
-//        dataAsyncService.pirGrpcTask(dataTask,resourceId,pirParam);
-//        Map<String, Object> map = new HashMap<>();
-//        map.put("taskId",dataTask.getTaskId());
-//        return BaseResultEntity.success(map);
-//    }
-
-    //    public BaseResultEntity getPirTaskList(DataPirTaskReq req) {
-//        List<DataPirTaskVo> dataPirTaskVos = dataTaskRepository.selectDataPirTaskPage(req);
-//        if (dataPirTaskVos.isEmpty())
-//            return BaseResultEntity.success(new PageDataEntity(0,req.getPageSize(),req.getPageNo(),new ArrayList()));
-//        Integer tolal = dataTaskRepository.selectDataPirTaskCount(req);
-//        Map<String,LinkedHashMap<String, Object>> resourceMap= new HashMap<>();
-//        Map<String, List<DataPirTaskVo>> resourceMapList = dataPirTaskVos.stream().collect(Collectors.groupingBy(DataPirTaskVo::getServerAddress));
-//        Iterator<Map.Entry<String, List<DataPirTaskVo>>> it = resourceMapList.entrySet().iterator();
-//        while (it.hasNext()){
-//            Map.Entry<String, List<DataPirTaskVo>> next = it.next();
-//            String[] ids = next.getValue().stream().map(DataPirTaskVo::getResourceId).toArray(String[]::new);
-//            BaseResultEntity baseResult = fusionResourceService.getResourceListById(next.getKey(), ids);
-//            if (baseResult.getCode()==0){
-//                List<LinkedHashMap<String,Object>> voList = (List<LinkedHashMap<String,Object>>)baseResult.getResult();
-//                if (voList != null && voList.size()!=0){
-//                    resourceMap.putAll(voList.stream().collect(Collectors.toMap(data -> data.get("resourceId").toString(), Function.identity())));
-//                }
-//            }
-//        }
-//        for (DataPirTaskVo dataPirTaskVo : dataPirTaskVos) {
-//            if (resourceMap.containsKey(dataPirTaskVo.getResourceId())){
-//                DataTaskConvert.dataPirTaskPoConvertDataPirTaskVo(dataPirTaskVo,resourceMap.get(dataPirTaskVo.getResourceId()));
-//            }
-//        }
-//        return BaseResultEntity.success(new PageDataEntity(tolal,req.getPageSize(),req.getPageNo(),dataPirTaskVos));
-//    }
     public BaseResultEntity createTemplate(ScdCreateTemplateReq req, Long userId) {
         ScdTemplate template = new ScdTemplate();
         template.setName(req.getName());
-        template.setAttrs(req.getAttrs());
+        template.setAttrs(req.getAttrs().toString());
         template.setStatus(ScdConstant.INACTIVE);
         scdTemplateRepository.saveTemplate(template);
-        dataAsyncService.createTemplate(template);
+        dataAsyncService.createTemplate(template,req.getAttrs());
         //todo
         return BaseResultEntity.success(template);
     }
@@ -147,9 +79,9 @@ public class ScdService {
         scdCertificate.setTempId(createCertificateReq.getTempId());
         scdCertificate.setUserId(userId);
         scdCertificate.setStatus(ScdConstant.INACTIVE);
-        scdCertificate.setAttrs(createCertificateReq.getAttrs());
+        scdCertificate.setAttrs(createCertificateReq.getAttrs().toString());
         scdCertificateRepository.saveCertificate(scdCertificate);
-        dataAsyncService.createCertificate(scdCertificate);
+        dataAsyncService.createCertificate(scdCertificate,createCertificateReq.getAttrs());
         return BaseResultEntity.success(scdCertificate);
     }
 
@@ -233,7 +165,9 @@ public class ScdService {
             scdPredicate.setValue(scdRule.getValue());
             return JSON.toJSONString(scdPredicate);
         }).collect(Collectors.toList());
-        dataAsyncService.verify(req,rules);
+        ScdTemplate scdTemplate = scdTemplateRepository.queryTemplate(req.getTempId());
+        ScdCertificate scdCertificate = scdCertificateRepository.queryCertificate(req.getCertId());
+        dataAsyncService.verify(scdTemplate.getCertificate(),scdCertificate.getCertificate(),rules);
 
         //todo
         return BaseResultEntity.success(scdRules);

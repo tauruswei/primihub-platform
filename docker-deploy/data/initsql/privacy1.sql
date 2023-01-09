@@ -737,6 +737,7 @@ CREATE TABLE `scd_certificate` (
                                   `name` varchar(255) COLLATE utf8_bin DEFAULT NULL COMMENT '保留字段',
                                   `attrs` blob COMMENT '证书属性',
                                   `certificate` blob COMMENT '证书，证书里面包含属性 json',
+                                  `pri_key` blob COMMENT '密钥 json',
                                   `temp_id` bigint(20) DEFAULT NULL COMMENT '模版id',
                                   `user_id` bigint(20) DEFAULT NULL COMMENT '保留字段，面向终端用户',
                                   `status` tinyint(1) DEFAULT NULL COMMENT '状态，0表示不可用，1表示可用',

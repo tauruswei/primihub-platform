@@ -1,8 +1,6 @@
 package com.primihub.biz.entity.scd.po;
 
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 
 import java.util.Date;
@@ -37,6 +35,11 @@ public class ScdCertificate {
      * 证书
      */
     private String certificate;
+
+    /**
+     * 密钥
+     */
+    private String priKey;
     /**
      * 模版id
      */
